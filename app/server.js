@@ -45,15 +45,14 @@ const contractAddress = process.env.CONTRACT_ADDRESS;
 
 // instância do contrato
 const contract = new ethers.Contract(contractAddress, contractABI, wallet);
+module.exports = contract;
 
 // rotas definidas no arquivo de rotas
-const routes = require('./routes/seguroRoutes');
-app.use('/api', routes);
+const router = require('./routes/seguroRoutes.js');
+app.use('/api', router);
 
 // rota para o servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`API rodando na porta ${PORT}`);
 });
-
-module.exports = contract;

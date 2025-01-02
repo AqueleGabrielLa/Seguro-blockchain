@@ -126,7 +126,7 @@ contract SeguroDidaticoCompleto {
         uint256 _idApolice,
         string memory _descricao,
         uint256 _valorPedido
-    ) external apoliceValida(_idApolice) returns (uint256) {
+    ) public apoliceValida(_idApolice) returns (uint256) {
         require(apolices[_idApolice].segurado == msg.sender, "Apenas o segurado pode registrar sinistro");
         require(_valorPedido <= apolices[_idApolice].valorCobertura, "Valor excede cobertura");
         require(premiosPagos[_idApolice], "Premio do seguro nao foi pago");

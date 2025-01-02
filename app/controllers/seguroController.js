@@ -3,7 +3,9 @@
 // processarEPagarSinistro 
 // consultarApoliceBase consultarApoliceStatus 
 // apoliceEstaPaga retirarFundos
-const contract = require('../server');
+const contract = require('../server.js');
+const { ethers } = require('ethers');
+const { JsonRpcProvider } = require('ethers');
 
 const helper = {
     async error(error){
@@ -45,12 +47,14 @@ module.exports = {
                     id,
                 });
             }
-            
-            console.log("Instância do contrato:", contract);
-            console.log("Funções disponíveis no contrato:", Object.keys(contract.functions));
+
+            const provider = new JsonRpcProvider(process.env.RPC_URL);
+            const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+
+            const contractWithSigner = contract.connect(wallet);
 
             // Chamada ao contrato inteligente
-            const tx = await contract.cadastrarSegurado(endereco, nome, documento);
+            const tx = await contractWithSigner.cadastrarSegurado(endereco, nome, documento);
             const receipt = await tx.wait();
     
             return res.json({
@@ -75,30 +79,6 @@ module.exports = {
             });
         }
     },
-
-    // async cadastrarSegurado (req, res) {
-    //     console.log("TESTEEEEEEEEEEE");
-        
-    //     try {
-    //         const { endereco, nome, documento } = req.body;
-    //         if(!endereco || !nome || !documento){
-    //             return res.status(400).json({ 
-    //                 error: 'Dados incompletos. Forneça endereço, nome e documento.' 
-    //             });
-    //         }
-
-    //         const tx = await contract.cadastrarSegurado(endereco, nome, documento);
-    //         const receipt = await tx.wait();
-
-    //         res.json({
-    //             success: true,
-    //             transactionHash: tx.hash,
-    //             blockNumber: receipt.blockNumber
-    //         });
-    //     } catch (error) {
-    //         helper.error(error);
-    //     }
-    // },
 
     // Criar nova apólice
     async criarApolice(req, res) {
