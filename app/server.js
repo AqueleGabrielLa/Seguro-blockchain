@@ -1,21 +1,56 @@
 const express = require('express');
 const { JsonRpcProvider } = require('ethers');
-const Contrato = require("../artifacts/contracts/index.sol/SeguroDidaticoCompleto.json");
 const { ethers } = require('ethers');
-
 require('dotenv').config();
 
+// config do servidor Express
 const app = express();
 app.use(express.json());
 
-const provider = new JsonRpcProvider(process.env.RPC_URL); 
+// connect provider do Ethereum
+const provider = new JsonRpcProvider(process.env.RPC_URL);
+
+// mock para evitar chamadas ao ENS
+provider.resolveName = async function(name) {
+    return name;  // Retorna o próprio nome sem tentar resolver no ENS
+};
+
 const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 
+async function checkNetwork() {
+    try {
+        
+        await provider.ready;
+
+        const network = await provider.getNetwork();
+        console.log('Rede conectada:', network.name);
+
+        if (network.name === 'unknown' || network.name !== 'hardhat') {
+            console.log('Rede não oferece suporte a ENS, desabilitando.');
+            provider.ensAddress = null;
+        } else {
+            console.log('Rede Hardhat detectada.');
+        }
+    } catch (error) {
+        console.error('Erro ao obter rede:', error);
+    }
+}
+
+checkNetwork();
+
+// ABI do contrato
+const Contrato = require("../artifacts/contracts/index.sol/SeguroDidaticoCompleto.json");
 const contractABI = Contrato.abi;
 const contractAddress = process.env.CONTRACT_ADDRESS;
 
+// instância do contrato
 const contract = new ethers.Contract(contractAddress, contractABI, wallet);
 
+// rotas definidas no arquivo de rotas
+const routes = require('./routes/seguroRoutes');
+app.use('/api', routes);
+
+// rota para o servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`API rodando na porta ${PORT}`);

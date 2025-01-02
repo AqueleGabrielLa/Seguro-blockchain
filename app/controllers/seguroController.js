@@ -15,29 +15,90 @@ const helper = {
     }
 }
 
-const seguroController = {
-
-    async cadastrarSegurado (req, res) {
+module.exports = {
+    async cadastrarSegurado(req, res) {
+        console.log("Recebendo requisição JSON-RPC...");
+    
+        const { jsonrpc, method, params, id } = req.body;
+    
+        // Validar se o formato JSON-RPC está correto
+        if (jsonrpc !== '2.0' || method !== 'cadastrarSegurado' || !Array.isArray(params)) {
+            return res.status(400).json({
+                jsonrpc: '2.0',
+                error: {
+                    code: -32600,
+                    message: 'Invalid Request',
+                },
+                id: id || null,
+            });
+        }
+    
         try {
-            const { endereco, nome, documento } = req.body;
-            if(!endereco || !nome || !documento){
-                return res.status(400).json({ 
-                    error: 'Dados incompletos. Forneça endereço, nome e documento.' 
+            const [endereco, nome, documento] = params;
+            if (!endereco || !nome || !documento) {
+                return res.status(400).json({
+                    jsonrpc: '2.0',
+                    error: {
+                        code: -32602,
+                        message: 'Dados incompletos. Forneça endereço, nome e documento.',
+                    },
+                    id,
                 });
             }
+            
+            console.log("Instância do contrato:", contract);
+            console.log("Funções disponíveis no contrato:", Object.keys(contract.functions));
 
+            // Chamada ao contrato inteligente
             const tx = await contract.cadastrarSegurado(endereco, nome, documento);
             const receipt = await tx.wait();
-
-            res.json({
-                success: true,
-                transactionHash: tx.hash,
-                blockNumber: receipt.blockNumber
+    
+            return res.json({
+                jsonrpc: '2.0',
+                result: {
+                    success: true,
+                    transactionHash: tx.hash,
+                    blockNumber: receipt.blockNumber,
+                },
+                id,
             });
         } catch (error) {
-            helper.error(error);
+            console.error("Erro no método cadastrarSegurado:", error);
+            return res.status(500).json({
+                jsonrpc: '2.0',
+                error: {
+                    code: -32603,
+                    message: 'Erro interno do servidor.',
+                    data: error.message,
+                },
+                id,
+            });
         }
     },
+
+    // async cadastrarSegurado (req, res) {
+    //     console.log("TESTEEEEEEEEEEE");
+        
+    //     try {
+    //         const { endereco, nome, documento } = req.body;
+    //         if(!endereco || !nome || !documento){
+    //             return res.status(400).json({ 
+    //                 error: 'Dados incompletos. Forneça endereço, nome e documento.' 
+    //             });
+    //         }
+
+    //         const tx = await contract.cadastrarSegurado(endereco, nome, documento);
+    //         const receipt = await tx.wait();
+
+    //         res.json({
+    //             success: true,
+    //             transactionHash: tx.hash,
+    //             blockNumber: receipt.blockNumber
+    //         });
+    //     } catch (error) {
+    //         helper.error(error);
+    //     }
+    // },
 
     // Criar nova apólice
     async criarApolice(req, res) {
@@ -132,5 +193,3 @@ const seguroController = {
         }
     }
 }
-
-module.exports = seguroController;
