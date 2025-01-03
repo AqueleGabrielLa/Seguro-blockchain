@@ -47,14 +47,9 @@ module.exports = {
                     id,
                 });
             }
-
-            const provider = new JsonRpcProvider(process.env.RPC_URL);
-            const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
-
-            const contractWithSigner = contract.connect(wallet);
-
+            
             // Chamada ao contrato inteligente
-            const tx = await contractWithSigner.cadastrarSegurado(endereco, nome, documento);
+            const tx = await contract.cadastrarSegurado(endereco, nome, documento);
             const receipt = await tx.wait();
     
             return res.json({
